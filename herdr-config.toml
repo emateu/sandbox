@@ -1,0 +1,9 @@
+onboarding = false
+
+[terminal]
+default_shell = "zsh"
+
+[ui]
+agent_panel_sort = "priority"
+# Single-column layout threshold (default 64); raised for phone SSH clients
+mobile_width_threshold = 100
