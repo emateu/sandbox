@@ -1,6 +1,6 @@
 # Copy to docker-compose.override.yml (gitignored); merged automatically.
-# For host-specific mounts, e.g. targets of symlinked skills.
+# For host-specific mounts.
 services:
   sandbox:
     volumes:
-      - ${HOME}/Code:/var/lib/claude-ephemeral/Code:ro,z
+      - /some/host/path:/home/${USERNAME}/path:ro,z

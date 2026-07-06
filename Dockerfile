@@ -78,13 +78,44 @@ RUN ARCH=$(uname -m) \
 
 COPY herdr-config.toml /etc/skel/.config/herdr/config.toml
 
-# Claude Code CLI
-RUN mkdir -p /var/lib/claude-ephemeral \
-    && HOME=/var/lib/claude-ephemeral bash -c 'curl -fsSL https://claude.ai/install.sh | bash' \
-    && chown -R ${HOST_UID}:${HOST_GID} /var/lib/claude-ephemeral
+# ~/.local/bin on PATH + 'claude' wrapper with the unattended flags
+RUN { \
+      echo ''; \
+      echo 'export PATH="$HOME/.local/bin:$PATH"'; \
+      echo 'claude() { IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"; }'; \
+    } >> /etc/skel/.bashrc \
+    && { \
+      echo ''; \
+      echo 'export PATH="$HOME/.local/bin:$PATH"'; \
+      echo 'claude() { IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"; }'; \
+    } >> /etc/skel/.zshrc
+
+# GitHub over https: ssh remotes rewritten, GH_TOKEN as credential (no ssh key)
+RUN printf '%s\n' \
+       '[url "https://github.com/"]' \
+       '  insteadOf = git@github.com:' \
+       '  insteadOf = ssh://git@github.com/' \
+       '[credential "https://github.com"]' \
+       '  helper = !gh auth git-credential' \
+       '[credential "https://gist.github.com"]' \
+       '  helper = !gh auth git-credential' \
+       > /etc/skel/.gitconfig
+
+# Baked skills; the entrypoint seeds missing ones into the skills dir
+COPY skills/ /usr/share/claude-skills/
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Rebake home from the finished skel (useradd -m ran before skel was populated)
+RUN rm -rf /home/${USERNAME} \
+    && cp -rT /etc/skel /home/${USERNAME}
+
+# Claude Code CLI (post-rebake: install paths must not move)
+RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
 
 # Claude Code settings
-RUN mkdir -p /var/lib/claude-ephemeral/.claude \
+RUN mkdir -p /home/${USERNAME}/.claude \
     && printf '%s\n' \
        '{' \
        '  "theme": "dark",' \
@@ -104,14 +135,10 @@ RUN mkdir -p /var/lib/claude-ephemeral/.claude \
        '    "commit": "",' \
        '    "pr": ""' \
        '  }' \
-       '}' > /var/lib/claude-ephemeral/.claude/settings.json \
-    && chown -R ${HOST_UID}:${HOST_GID} /var/lib/claude-ephemeral/.claude
+       '}' > /home/${USERNAME}/.claude/settings.json
 
-# Workspace trust: statusLine/hooks run ONLY in trusted dirs; skip-permissions
-# just hides the dialog, it does NOT grant trust. Trust ~/Code for the repos and
-# ~/.herdr/worktrees so herdr worktree checkouts are trusted too — otherwise the
-# statusLine and agent-state hook silently vanish inside worktrees. The worktree
-# path is pinned to match in herdr-config.toml ([worktrees] directory).
+# Workspace trust gates statusLine/hooks (skip-permissions does NOT grant it);
+# worktrees path pinned in herdr-config.toml
 RUN printf '%s\n' \
        '{' \
        '  "projects": {' \
@@ -122,37 +149,17 @@ RUN printf '%s\n' \
        '      "hasTrustDialogAccepted": true' \
        '    }' \
        '  }' \
-       '}' > /var/lib/claude-ephemeral/.claude.json \
-    && chown ${HOST_UID}:${HOST_GID} /var/lib/claude-ephemeral/.claude.json
+       '}' > /home/${USERNAME}/.claude.json
 
-# Status line script (referenced by settings.json)
-COPY --chown=${HOST_UID}:${HOST_GID} statusline.sh /var/lib/claude-ephemeral/.claude/statusline.sh
-RUN chmod +x /var/lib/claude-ephemeral/.claude/statusline.sh
+# Status line script
+COPY statusline.sh /home/${USERNAME}/.claude/statusline.sh
+RUN chmod +x /home/${USERNAME}/.claude/statusline.sh
 
-# herdr <-> Claude integration (agent-state hook: sidebar state, auto-resume)
-RUN HOME=/var/lib/claude-ephemeral herdr integration install claude \
-    && chown -R ${HOST_UID}:${HOST_GID} /var/lib/claude-ephemeral/.claude
+# herdr <-> Claude integration; post-rebake (registers an absolute hook path)
+RUN HOME=/home/${USERNAME} herdr integration install claude
 
-# Baked skills; the entrypoint seeds missing ones into the skills dir
-COPY skills/ /usr/share/claude-skills/
-
-# 'claude' wrapper: $HOME redirected to the scratch dir
-RUN { \
-      echo ''; \
-      echo 'claude() { IS_DEMO=0 HOME=/var/lib/claude-ephemeral /var/lib/claude-ephemeral/.local/bin/claude --dangerously-skip-permissions --effort max "$@"; }'; \
-    } >> /etc/skel/.bashrc \
-    && { \
-      echo ''; \
-      echo 'claude() { IS_DEMO=0 HOME=/var/lib/claude-ephemeral /var/lib/claude-ephemeral/.local/bin/claude --dangerously-skip-permissions --effort max "$@"; }'; \
-    } >> /etc/skel/.zshrc
-
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Rebake home from the finished skel (useradd -m ran before skel was populated)
-RUN rm -rf /home/${USERNAME} \
-    && cp -rT /etc/skel /home/${USERNAME} \
-    && chown -R ${HOST_UID}:${HOST_GID} /home/${USERNAME}
+# Build steps ran as root; hand the home to the user
+RUN chown -R ${HOST_UID}:${HOST_GID} /home/${USERNAME}
 
 # docker exec sets no SHELL; herdr falls back to sh without it
 ENV SHELL=/usr/bin/zsh

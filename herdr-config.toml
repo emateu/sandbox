@@ -9,9 +9,6 @@ agent_panel_sort = "priority"
 mobile_width_threshold = 100
 
 [worktrees]
-# Pin checkouts under a path pre-trusted in the image (see Dockerfile
-# .claude.json) so Claude Code's statusLine + agent-state hook run inside
-# worktrees. Checkouts land at <directory>/<repo>/<branch-slug>. This is also
-# herdr's current default; pinning keeps it locked to the trusted path if the
-# default ever changes.
+# Pre-trusted in the image (Dockerfile .claude.json) so statusLine/hooks run
+# inside worktree checkouts
 directory = "~/.herdr/worktrees"

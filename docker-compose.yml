@@ -13,15 +13,17 @@ services:
     working_dir: /home/${USERNAME}/Code
     environment:
       CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      # GitHub fine-grained PAT (gh + git credential helper)
+      GH_TOKEN: ${GH_TOKEN:-}
+      # Commit identity (entrypoint writes ~/.gitconfig)
+      GIT_USER_NAME: ${GIT_USER_NAME:-}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL:-}
     volumes:
       # :z is for SELinux hosts; Docker on macOS ignores it.
       - ${HOME}/Code:/home/${USERNAME}/Code:z
-      # SSH_KEY (.env) is mounted as id_ed25519 so ssh uses it with no config.
-      - ${SSH_KEY:?Set SSH_KEY in .env}:/home/${USERNAME}/.ssh/id_ed25519:ro,z
-      - ${SSH_KEY}.pub:/home/${USERNAME}/.ssh/id_ed25519.pub:ro,z
       # Skills live from the host; ~/.agents mounted so skill symlinks resolve.
-      - ${HOME}/.claude/skills:/var/lib/claude-ephemeral/.claude/skills:z
-      - ${HOME}/.agents:/var/lib/claude-ephemeral/.agents:z
+      - ${HOME}/.claude/skills:/home/${USERNAME}/.claude/skills:z
+      - ${HOME}/.agents:/home/${USERNAME}/.agents:z
       # Host-specific mounts go in docker-compose.override.yml (see .example).
     tty: true
     stdin_open: true
