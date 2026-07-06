@@ -107,11 +107,18 @@ RUN mkdir -p /var/lib/claude-ephemeral/.claude \
        '}' > /var/lib/claude-ephemeral/.claude/settings.json \
     && chown -R ${HOST_UID}:${HOST_GID} /var/lib/claude-ephemeral/.claude
 
-# Workspace trust: statusLine/hooks need it; skip-permissions hides the dialog.
+# Workspace trust: statusLine/hooks run ONLY in trusted dirs; skip-permissions
+# just hides the dialog, it does NOT grant trust. Trust ~/Code for the repos and
+# ~/.herdr/worktrees so herdr worktree checkouts are trusted too — otherwise the
+# statusLine and agent-state hook silently vanish inside worktrees. The worktree
+# path is pinned to match in herdr-config.toml ([worktrees] directory).
 RUN printf '%s\n' \
        '{' \
        '  "projects": {' \
        "    \"/home/${USERNAME}/Code\": {" \
+       '      "hasTrustDialogAccepted": true' \
+       '    },' \
+       "    \"/home/${USERNAME}/.herdr/worktrees\": {" \
        '      "hasTrustDialogAccepted": true' \
        '    }' \
        '  }' \
