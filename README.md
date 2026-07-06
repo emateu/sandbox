@@ -19,6 +19,10 @@ Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + 
 
 `GH_TOKEN` (a fine-grained PAT) authenticates `gh` directly and `git` through gh's credential helper. SSH remotes (`git@github.com:...`) are rewritten to https on the fly via `url.insteadOf`, so existing checkouts push fine without any key in the container.
 
+## npm registries
+
+Projects with a committed `.npmrc` just work. For registries configured at user level (`~/.npmrc` with registry + key), mount the file read-only via the override — see the `.example`. It can't live in the base compose: on hosts without the file, docker would create a root-owned directory in its place. Prefer a read-only token if yours can publish.
+
 ## Volumes
 
 | Host | Container | Notes |

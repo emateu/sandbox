@@ -1,6 +1,6 @@
 # Copy to docker-compose.override.yml (gitignored); merged automatically.
-# For host-specific mounts.
+# For host-specific mounts, e.g. a full custom user .npmrc:
 services:
   sandbox:
     volumes:
-      - /some/host/path:/home/${USERNAME}/path:ro,z
+      - ${HOME}/.npmrc:/home/${USERNAME}/.npmrc:ro,z
