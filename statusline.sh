@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Code statusLine: model · git branch · tokens · % context · session cost
+# Claude Code statusLine: model · % context · effort · git branch · tokens · session cost
 export LC_ALL=C
 input=$(cat)
 
@@ -30,4 +30,4 @@ EFF=""
 
 COST_FMT=$(printf '%.2f' "$COST")
 
-printf '[%s%s%s]%s | in:%s out:%s | %s%% ctx | $%s\n' "$MODEL" "$WINLABEL" "$EFF" "$GIT" "$IN" "$OUT" "$PCT" "$COST_FMT"
+printf '[%s%s | %s%%%s]%s | in:%s out:%s | $%s\n' "$MODEL" "$WINLABEL" "$PCT" "$EFF" "$GIT" "$IN" "$OUT" "$COST_FMT"
