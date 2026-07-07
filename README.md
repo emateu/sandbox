@@ -23,13 +23,9 @@ Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + 
 
 Projects with a committed `.npmrc` just work. For registries configured at user level (`~/.npmrc` with registry + key), mount the file read-only via the override — see the `.example`. It can't live in the base compose: on hosts without the file, docker would create a root-owned directory in its place. Prefer a read-only token if yours can publish.
 
-## Volumes
+## What the container sees
 
-| Host | Container | Notes |
-|---|---|---|
-| `~/Code` | `~/Code` | read-write |
-| `~/.claude/skills` | `~/.claude/skills` | read-write; changes land on the host |
-| `~/.agents` | `~/.agents` | resolves skill symlinks |
+Mounted from the host at the same paths: `~/Code` (read-write) and your agent skills — `~/.claude/skills`, plus `~/.agents` so skill symlinks resolve. Everything else is image-baked and gone on recreate.
 
 Host-specific mounts go in `docker-compose.override.yml` (gitignored, merged automatically) — see the `.example`.
 
