@@ -82,12 +82,12 @@ COPY herdr-config.toml /etc/skel/.config/herdr/config.toml
 RUN { \
       echo ''; \
       echo 'export PATH="$HOME/.local/bin:$PATH"'; \
-      echo 'claude() { IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"; }'; \
+      echo 'claude() { local _t; if [ -n "$OAUTH_TOKEN_STORE" ] && [ -f "$OAUTH_TOKEN_STORE" ]; then _t="$(node "$(dirname "$OAUTH_TOKEN_STORE")/refresh.mjs" --print 2>/dev/null)" && [ -n "$_t" ] && export CLAUDE_CODE_OAUTH_TOKEN="$_t"; fi; IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"; }'; \
     } >> /etc/skel/.bashrc \
     && { \
       echo ''; \
       echo 'export PATH="$HOME/.local/bin:$PATH"'; \
-      echo 'claude() { IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"; }'; \
+      echo 'claude() { local _t; if [ -n "$OAUTH_TOKEN_STORE" ] && [ -f "$OAUTH_TOKEN_STORE" ]; then _t="$(node "$(dirname "$OAUTH_TOKEN_STORE")/refresh.mjs" --print 2>/dev/null)" && [ -n "$_t" ] && export CLAUDE_CODE_OAUTH_TOKEN="$_t"; fi; IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"; }'; \
     } >> /etc/skel/.zshrc
 
 # GitHub over https: ssh remotes rewritten, GH_TOKEN as credential (no ssh key)

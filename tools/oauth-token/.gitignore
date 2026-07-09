@@ -1,0 +1,5 @@
+# The long-lived credential and any token dumps — never commit.
+.tokens.json
+.tokens.json.lock
+*.backup.json
+node_modules/

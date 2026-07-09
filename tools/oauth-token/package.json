@@ -1,0 +1,18 @@
+{
+  "name": "oauth-token",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Keep CLAUDE_CODE_OAUTH_TOKEN in .env fresh: HTTP refresh (daily) + rare browser login.",
+  "bin": {
+    "oauth-refresh": "./refresh.mjs",
+    "oauth-login": "./login.mjs"
+  },
+  "scripts": {
+    "refresh": "node refresh.mjs",
+    "login": "node login.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.61.1"
+  }
+}
