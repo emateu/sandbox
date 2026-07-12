@@ -6,10 +6,16 @@ Docker sandbox for running coding agents unattended, isolated from the host. The
 
 ```bash
 git clone https://github.com/emateu/sandbox.git && cd sandbox
-cp .env.example .env          # UID/GID/username, tokens (`claude setup-token`, GitHub PAT), git identity
+cp .env.example .env
+$EDITOR .env                  # fill every required field; comments show how
+./tools/preflight.sh          # checks the host before you spend a build on it
 docker compose up -d --build
 docker exec -it sandbox zsh   # repos at ~/Code; run `claude` or `herdr`
 ```
+
+Create and fill `.env` before running helper tools. Then run `./tools/preflight.sh`: it
+fails on invalid required build settings and reports host setup or credential concerns
+as errors or warnings before you build.
 
 ## Contents
 
@@ -21,7 +27,8 @@ Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + 
 
 ## Helper tools
 
-- [`tools/oauth-token/`](tools/oauth-token/README.md) — generate `CLAUDE_CODE_OAUTH_TOKEN` and keep it fresh. `get-token.sh` does a one-time browser OAuth login (macOS or Linux) and writes it to `.env`; the container's `claude` wrapper then refreshes it from a stored refresh token on each launch. An alternative to `claude setup-token`.
+- `tools/preflight.sh` — validate the host before building. Run it after editing `.env`, and any time the build or the container misbehaves.
+- [`tools/oauth-token/`](tools/oauth-token/README.md) — generate `CLAUDE_CODE_OAUTH_TOKEN` and keep it fresh. `get-token.sh` does a one-time browser OAuth login (macOS or Linux) and writes it to an existing `.env`; the container's `claude` wrapper then refreshes it from a stored refresh token on each launch. An alternative to `claude setup-token`.
 - `tools/ephemeral-browser.sh [url]` — headed Chrome in a throwaway temp profile, deleted on exit.
 
 ## npm registries
@@ -31,6 +38,8 @@ Projects with a committed `.npmrc` just work. For registries configured at user 
 ## What the container sees
 
 Mounted from the host at the same paths: `~/Code` (read-write) and your agent skills — `~/.claude/skills`, plus `~/.agents` so skill symlinks resolve. Everything else is image-baked and gone on recreate.
+
+The container uses the UID/GID configured in `.env`. Match them to `id -u` and `id -g`: on Linux, those IDs own files created in bind mounts; on macOS, Docker Desktop remaps bind-mount ownership, but accurate values keep the setup portable.
 
 Host-specific mounts go in `docker-compose.override.yml` (gitignored, merged automatically) — see the `.example`.
 

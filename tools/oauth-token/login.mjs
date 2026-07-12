@@ -110,7 +110,15 @@ if (!cb) {
 
 const tokens = await exchangeCode({ code: cb.code, verifier: pkce.verifier, state: cb.state });
 saveStore(tokens);
-updateEnv(tokens.access_token);
+try {
+  updateEnv(tokens.access_token);
+} catch (e) {
+  // The login itself succeeded and the store is written; only .env is missing.
+  await ctx.close().catch(() => {});
+  console.log(`login ✔  access ${mask(tokens.access_token)}  ·  refresh_token stored (~28d)`);
+  console.error(`\n${e.message}`);
+  process.exit(1);
+}
 await ctx.close().catch(() => {});
 console.log(`login ✔  access ${mask(tokens.access_token)}  ·  refresh_token stored (~28d)`);
 console.log(`.env updated: ${ENV_KEY}`);

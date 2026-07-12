@@ -4,9 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        HOST_UID: ${HOST_UID}
-        HOST_GID: ${HOST_GID}
-        USERNAME: ${USERNAME}
+        # An unset var becomes an empty --build-arg that shadows the Dockerfile's
+        # ARG default, failing deep inside useradd. Fail here instead.
+        HOST_UID: ${HOST_UID:?unset — set it in .env to `id -u`}
+        HOST_GID: ${HOST_GID:?unset — set it in .env to `id -g`}
+        USERNAME: ${USERNAME:?unset — set it in .env to `whoami`}
     image: sandbox-fedora:44
     container_name: sandbox
     hostname: sandbox

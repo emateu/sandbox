@@ -7,6 +7,8 @@ sandbox container needs to run Claude Code unattended. It replicates
 ## Quick start — from a fresh clone
 
 ```bash
+cp .env.example .env
+$EDITOR .env                  # fill HOST_UID, HOST_GID, and USERNAME first
 ./tools/oauth-token/get-token.sh
 ```
 
@@ -14,6 +16,11 @@ It prompts for your email (hidden — kept out of shell history, argv, `ps`, and
 launches a real Chrome, drives the claude.ai login, and asks you for the code
 claude.com emails you. Paste it and `CLAUDE_CODE_OAUTH_TOKEN` lands in `.env`. The
 browser is scripted over CDP; your only inputs are those two prompts.
+
+The helper requires an existing, completed `.env`; it fills the token key but does not
+create the file. If login reports a missing `.env`, create it from `.env.example`, fill
+the required user settings, then run `node tools/oauth-token/refresh.mjs` to write the
+already-saved token.
 
 Supply the email non-interactively with `OAUTH_EMAIL=you@example.com
 ./tools/oauth-token/get-token.sh` (a positional `get-token.sh you@example.com` works
@@ -73,7 +80,7 @@ The `refresh_token` (the long-lived credential) lives in `.tokens.json`, **gitig
 
 | file | role |
 |---|---|
-| `get-token.sh` | one-command bootstrap: Chrome + login + write `.env` |
+| `get-token.sh` | one-command bootstrap: Chrome + login + update an existing `.env` |
 | `login.mjs` | drives the OAuth login over CDP; prompts for the email code |
 | `refresh.mjs` | `refresh_token` → `access_token` → `.env` (no browser) |
 | `lib.mjs` | shared OAuth / PKCE / store / `.env` helpers |

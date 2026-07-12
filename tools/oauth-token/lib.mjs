@@ -111,8 +111,18 @@ export function saveStore(tokens) {
 }
 
 export function updateEnv(access_token) {
+  // Never create .env: one holding only this key would lack the build args.
+  // Callers run saveStore() first, so the tokens survive this throw.
+  if (!existsSync(ENV_PATH)) {
+    throw new Error(
+      `${ENV_PATH} does not exist; token saved in ${STORE_PATH}.\n` +
+        `  Create and fill .env, then write the saved token:\n` +
+        `    cp .env.example .env\n` +
+        `    node ${join(HERE, "refresh.mjs")}`,
+    );
+  }
   const line = `${ENV_KEY}=${access_token}`;
-  let env = existsSync(ENV_PATH) ? readFileSync(ENV_PATH, "utf8") : "";
+  let env = readFileSync(ENV_PATH, "utf8");
   const re = new RegExp(`^${ENV_KEY}=.*$`, "m");
   env = re.test(env) ? env.replace(re, line) : env.replace(/\n*$/, "\n") + line + "\n";
   writeFileSync(ENV_PATH, env);

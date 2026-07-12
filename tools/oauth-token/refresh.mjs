@@ -33,16 +33,25 @@ if (process.argv.includes("--print")) {
     console.error(`Run the one-time browser login first:  ./get-token.sh`);
     process.exit(1);
   }
+  let tokens, rec;
   try {
-    const tokens = await refreshTokens(store.refresh_token);
-    const rec = saveStore(tokens);
-    updateEnv(tokens.access_token);
-    console.log(`refreshed ✔  access ${mask(tokens.access_token)}  (valid 8h)`);
-    console.log(`refresh_token rotated, valid ~${days(rec.refresh_expires_at - rec.obtained_at)}d`);
-    console.log(`.env updated: ${ENV_KEY}`);
+    tokens = await refreshTokens(store.refresh_token);
+    rec = saveStore(tokens);
   } catch (e) {
     console.error("refresh failed:", e.message);
     console.error("If the refresh_token expired (>28d idle) or was revoked, run: ./get-token.sh");
     process.exit(1);
   }
+  // Kept out of the catch above: a missing .env is not a failed refresh, and
+  // reporting it as one sends you off chasing an expired token.
+  try {
+    updateEnv(tokens.access_token);
+  } catch (e) {
+    console.log(`refreshed ✔  access ${mask(tokens.access_token)}  (valid 8h)`);
+    console.error(`\n${e.message}`);
+    process.exit(1);
+  }
+  console.log(`refreshed ✔  access ${mask(tokens.access_token)}  (valid 8h)`);
+  console.log(`refresh_token rotated, valid ~${days(rec.refresh_expires_at - rec.obtained_at)}d`);
+  console.log(`.env updated: ${ENV_KEY}`);
 }
