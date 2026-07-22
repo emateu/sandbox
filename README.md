@@ -21,6 +21,8 @@ as errors or warnings before you build.
 
 Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + oh-my-zsh · Node (fnm) · bun · git, gh, vim, jq · Claude Code CLI · herdr with its Claude Code integration and skill.
 
+Tools install through their official installers at whatever version is latest when the layer builds; rebuild with `--no-cache` to refresh them.
+
 ## GitHub access
 
 `GH_TOKEN` (a fine-grained PAT) authenticates `gh` directly and `git` through gh's credential helper. SSH remotes (`git@github.com:...`) are rewritten to https on the fly via `url.insteadOf`, so existing checkouts push fine without any key in the container.
@@ -48,6 +50,7 @@ Host-specific mounts go in `docker-compose.override.yml` (gitignored, merged aut
 ```bash
 docker compose up -d --force-recreate   # fresh environment, same image
 docker compose up -d --build            # rebuild after image changes
+docker compose build --no-cache         # refresh tool versions (nothing is pinned)
 docker compose down --rmi all           # remove everything
 ```
 
