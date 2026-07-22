@@ -29,8 +29,7 @@ fi
 # Chrome launcher for this OS (macOS .app, Linux flatpak, or a Linux binary).
 if [ "$(uname -s)" = Darwin ]; then
   for c in "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-           "/Applications/Chromium.app/Contents/MacOS/Chromium" \
-           "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"; do
+           "/Applications/Chromium.app/Contents/MacOS/Chromium"; do
     [ -x "$c" ] && CHROME=("$c") && break
   done
 elif flatpak info com.google.Chrome >/dev/null 2>&1; then
