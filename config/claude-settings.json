@@ -1,0 +1,19 @@
+{
+  "theme": "dark",
+  "verbose": true,
+  "autoCompactEnabled": false,
+  "spinnerTipsEnabled": false,
+  "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "permissions": {
+    "defaultMode": "dontAsk"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
+}
