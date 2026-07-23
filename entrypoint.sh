@@ -59,4 +59,17 @@ for src_root in /mnt/skills /usr/share/claude-skills; do
   done
 done
 
+# jira-cli config regenerated from .env each recreate; non-fatal, and
+# </dev/null so an unexpected prompt fails instead of hanging the boot
+if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "${JIRA_SERVER:-}" ] && [ -n "${JIRA_LOGIN:-}" ] \
+   && [ -n "${SANDBOX_JIRA_PROJECT:-}" ] && [ ! -f "$HOME/.config/.jira/.config.yml" ]; then
+  if jira init --installation cloud --server "$JIRA_SERVER" --login "$JIRA_LOGIN" \
+       --auth-type basic --project "$SANDBOX_JIRA_PROJECT" --board "${SANDBOX_JIRA_BOARD:-None}" \
+       --force >/dev/null 2>&1 </dev/null; then
+    echo "jira: config generated for $JIRA_SERVER"
+  else
+    echo "jira: init failed — run \`jira init\` manually" >&2
+  fi
+fi
+
 exec "$@"

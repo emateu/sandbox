@@ -41,6 +41,14 @@ RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://bun.com/install | bash'
 # herdr (herdr.dev); system-wide so the root-run integration step finds it
 RUN HERDR_INSTALL_DIR=/usr/local/bin sh -c 'curl -fsSL https://herdr.dev/install.sh | sh'
 
+# jira-cli (github release binary; no official installer)
+RUN arch=$(uname -m | sed 's/aarch64/arm64/') \
+    && curl -fsSL https://api.github.com/repos/ankitpokhrel/jira-cli/releases/latest \
+       | jq -r '.assets[].browser_download_url' | grep "linux_${arch}.tar.gz" \
+       | xargs curl -fsSL | tar -xz -C /tmp \
+    && install -m 0755 /tmp/jira_*/bin/jira /usr/local/bin/jira \
+    && rm -rf /tmp/jira_*
+
 COPY config/herdr-config.toml /home/${USERNAME}/.config/herdr/config.toml
 COPY config/hunk-config.toml /home/${USERNAME}/.config/hunk/config.toml
 

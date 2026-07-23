@@ -27,6 +27,13 @@ services:
       # Repos to copy into ~/Code, and dirs to skip while copying (see README)
       SANDBOX_REPOS: ${SANDBOX_REPOS:-}
       SANDBOX_COPY_EXCLUDES: ${SANDBOX_COPY_EXCLUDES:-}
+      # jira-cli; project/board renamed inside — jira-cli treats JIRA_* env
+      # as config overrides and a plain JIRA_PROJECT breaks its project object
+      JIRA_API_TOKEN: ${JIRA_API_TOKEN:-}
+      JIRA_SERVER: ${JIRA_SERVER:-}
+      JIRA_LOGIN: ${JIRA_LOGIN:-}
+      SANDBOX_JIRA_PROJECT: ${JIRA_PROJECT:-}
+      SANDBOX_JIRA_BOARD: ${JIRA_BOARD:-}
     volumes:
       # :z is for SELinux hosts; Docker on macOS ignores it.
       # The entrypoint copies SANDBOX_REPOS from here into the container's ~/Code
