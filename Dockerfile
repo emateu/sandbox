@@ -5,7 +5,7 @@ ARG HOST_GID=1000
 ARG USERNAME=dev
 ARG NODE_VERSION=22
 
-RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync && dnf clean all
+RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server && dnf clean all
 
 RUN if getent group ${HOST_GID} >/dev/null; then \
         GROUPNAME=$(getent group ${HOST_GID} | cut -d: -f1); \
@@ -14,6 +14,7 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
         groupadd -g ${HOST_GID} ${GROUPNAME}; \
     fi \
     && useradd -u ${HOST_UID} -g ${HOST_GID} -m -s /usr/bin/zsh ${USERNAME} \
+    && passwd -d ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
@@ -67,6 +68,15 @@ RUN printf '%s\n' \
        '[credential "https://gist.github.com"]' \
        '  helper = !gh auth git-credential' \
        > /home/${USERNAME}/.gitconfig
+
+# sshd, promptless none-auth (empty password). Sound only because compose
+# publishes the port on 127.0.0.1 — local users already have `docker exec`.
+RUN printf '%s\n' \
+       'PermitEmptyPasswords yes' \
+       'PasswordAuthentication yes' \
+       'UsePAM no' \
+       "AllowUsers ${USERNAME}" \
+       > /etc/ssh/sshd_config.d/50-sandbox.conf
 
 # Baked skills; the entrypoint seeds missing ones into the skills dir
 COPY skills/ /usr/share/claude-skills/

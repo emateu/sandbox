@@ -4,6 +4,9 @@
 export TERM=xterm-256color
 export COLORTERM=truecolor
 
+# ssh sessions get a clean env; the entrypoint persists the container's here
+[ -f "$HOME/.config/sandbox-env.sh" ] && . "$HOME/.config/sandbox-env.sh"
+
 # fnm
 export PATH="$HOME/.local/share/fnm:$PATH"
 if [ -n "$ZSH_VERSION" ]; then

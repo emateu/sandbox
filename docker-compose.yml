@@ -13,6 +13,9 @@ services:
     container_name: sandbox
     hostname: sandbox
     working_dir: /home/${USERNAME}/Code
+    ports:
+      # Loopback only — the no-auth sshd must never be reachable off-host
+      - "127.0.0.1:${SANDBOX_SSH_PORT:-2222}:22"
     environment:
       # Fallback token. The claude() wrapper prefers refreshing from the
       # oauth-token store below when it is present.
@@ -43,6 +46,8 @@ services:
       - ${HOME}/.agents:/home/${USERNAME}/.agents:ro,z
       # oauth-token tool + refresh_token store; rw so token rotation persists.
       - ./tools/oauth-token:/home/${USERNAME}/.oauth-token:z
+      # ssh host keys, generated on first boot
+      - ./tools/ssh:/mnt/ssh-host:z
       # Host-specific mounts go in docker-compose.override.yml (see .example).
     tty: true
     stdin_open: true

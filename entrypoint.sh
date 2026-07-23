@@ -72,4 +72,17 @@ if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "${JIRA_SERVER:-}" ] && [ -n "${JIRA_LOG
   fi
 fi
 
+# ssh sessions start with a clean env; persist the container's for shellrc
+printenv | grep -E '^(CLAUDE_CODE_OAUTH_TOKEN|OAUTH_TOKEN_STORE|GH_TOKEN|GIT_USER_NAME|GIT_USER_EMAIL|JIRA_API_TOKEN|JIRA_SERVER|JIRA_LOGIN|SANDBOX_)' \
+  | while IFS='=' read -r k v; do printf 'export %s=%q\n' "$k" "$v"; done \
+  > "$HOME/.config/sandbox-env.sh"
+
+# sshd; host keys persist in the tools/ssh mount so fingerprints survive rebuilds
+if [ -d /mnt/ssh-host ]; then
+  sudo test -f /mnt/ssh-host/ssh_host_ed25519_key \
+    || sudo ssh-keygen -q -t ed25519 -N '' -f /mnt/ssh-host/ssh_host_ed25519_key
+  sudo /usr/sbin/sshd -h /mnt/ssh-host/ssh_host_ed25519_key \
+    || echo "sshd failed to start" >&2
+fi
+
 exec "$@"
