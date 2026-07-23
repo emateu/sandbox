@@ -30,6 +30,19 @@ if [ -n "${SANDBOX_REPOS:-}" ] && [ -d /mnt/seed ]; then
     rsync -a "${excludes[@]}" "$src/" "$dest.seeding/"
     mv "$dest.seeding" "$dest"
     echo "seed: copied $repo"
+    # Multi-account ssh aliases (git@github.com-work:...) have no key in here;
+    # rewrite to https so gh's PAT credential helper applies
+    if [ -e "$dest/.git" ]; then
+      for remote in $(git -C "$dest" remote); do
+        url="$(git -C "$dest" remote get-url "$remote")"
+        case "$url" in
+          git@github.com-*:*)
+            git -C "$dest" remote set-url "$remote" "https://github.com/${url#git@github.com-*:}"
+            echo "seed: $repo remote '$remote' rewritten to https"
+            ;;
+        esac
+      done
+    fi
   done
 fi
 
