@@ -31,6 +31,10 @@ RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://fnm.vercel.app/install | 
 RUN FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm install ${NODE_VERSION} \
     && FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm default ${NODE_VERSION}
 
+# corepack (latest over the bundled one) with pnpm enabled
+RUN FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm exec --using ${NODE_VERSION} npm install -g corepack@latest \
+    && FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm exec --using ${NODE_VERSION} corepack enable pnpm
+
 # hunkdiff; its bundled hunk-review skill joins the baked skills the entrypoint seeds
 RUN FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm exec --using ${NODE_VERSION} npm install -g hunkdiff \
     && mkdir -p /usr/share/claude-skills \
