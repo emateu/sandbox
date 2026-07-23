@@ -24,9 +24,13 @@ services:
       # Commit identity (entrypoint writes ~/.gitconfig)
       GIT_USER_NAME: ${GIT_USER_NAME:-}
       GIT_USER_EMAIL: ${GIT_USER_EMAIL:-}
+      # Repos to copy into ~/Code, and dirs to skip while copying (see README)
+      SANDBOX_REPOS: ${SANDBOX_REPOS:-}
+      SANDBOX_COPY_EXCLUDES: ${SANDBOX_COPY_EXCLUDES:-}
     volumes:
       # :z is for SELinux hosts; Docker on macOS ignores it.
-      - ${HOME}/Code:/home/${USERNAME}/Code:z
+      # The entrypoint copies SANDBOX_REPOS from here into the container's ~/Code
+      - ${HOME}/Code:/mnt/seed:ro,z
       # Skills live from the host; ~/.agents mounted so skill symlinks resolve.
       - ${HOME}/.claude/skills:/home/${USERNAME}/.claude/skills:z
       - ${HOME}/.agents:/home/${USERNAME}/.agents:z

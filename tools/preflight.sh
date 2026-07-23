@@ -61,6 +61,15 @@ yaml_value() {
   '
 }
 
+strip_quotes() {
+  local v="$1"
+  case "$v" in
+    \"*\") v="${v#\"}"; v="${v%\"}" ;;
+    \'*\') v="${v#\'}"; v="${v%\'}" ;;
+  esac
+  printf '%s' "$v"
+}
+
 load_best_effort_values() {
   E_UID="$(best_effort_value HOST_UID)"
   E_GID="$(best_effort_value HOST_GID)"
@@ -167,6 +176,30 @@ for d in "$HOME/Code" "$HOME/.claude/skills" "$HOME/.agents"; do
     warn "mount source missing: $d — docker will create it root-owned. mkdir -p '$d'"
   fi
 done
+
+# --- seed repos -----------------------------------------------------------------
+# SANDBOX_REPOS never reaches the rendered compose config as a parsed list, so a
+# best-effort .env read is all there is for it.
+SANDBOX_REPOS_VALUE="$(strip_quotes "$(best_effort_value SANDBOX_REPOS)")"
+seed_errors_before=$errors
+if [ -n "$SANDBOX_REPOS_VALUE" ]; then
+  for r in $SANDBOX_REPOS_VALUE; do
+    case "$r" in
+      /*|*..*)
+        err "SANDBOX_REPOS entry '$r' must be a relative path under ~/Code, no '..'"
+        continue
+        ;;
+    esac
+    if [ ! -d "$HOME/Code/$r" ]; then
+      err "SANDBOX_REPOS entry missing on host: ~/Code/$r"
+    elif [ ! -e "$HOME/Code/$r/.git" ]; then
+      warn "~/Code/$r is not a git repo — changes can't leave the sandbox via git push"
+    fi
+  done
+  [ "$errors" -eq "$seed_errors_before" ] && ok "seed repos: $(echo "$SANDBOX_REPOS_VALUE" | wc -w | tr -d ' ') configured"
+else
+  warn "SANDBOX_REPOS unset — the container's ~/Code starts empty (host repos are only visible read-only at /mnt/seed)"
+fi
 
 # --- credentials --------------------------------------------------------------
 STORE="$REPO/tools/oauth-token/.tokens.json"

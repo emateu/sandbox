@@ -5,7 +5,7 @@ ARG HOST_GID=1000
 ARG USERNAME=dev
 ARG NODE_VERSION=22
 
-RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk && dnf clean all
+RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync && dnf clean all
 
 RUN if getent group ${HOST_GID} >/dev/null; then \
         GROUPNAME=$(getent group ${HOST_GID} | cut -d: -f1); \
@@ -87,8 +87,10 @@ RUN chmod +x /home/${USERNAME}/.claude/statusline.sh
 # herdr <-> Claude integration (registers an absolute hook path)
 RUN HOME=/home/${USERNAME} herdr integration install claude
 
-# Build steps ran as root; hand the home to the user
-RUN chown -R ${HOST_UID}:${HOST_GID} /home/${USERNAME}
+# Build steps ran as root; hand the home to the user. ~/Code made here — nothing
+# mounts it now, and the runtime would create the workdir root-owned.
+RUN mkdir -p /home/${USERNAME}/Code \
+    && chown -R ${HOST_UID}:${HOST_GID} /home/${USERNAME}
 
 # docker exec sets no SHELL; herdr falls back to sh without it
 ENV SHELL=/usr/bin/zsh

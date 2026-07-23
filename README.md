@@ -1,6 +1,6 @@
 # sandbox
 
-Docker sandbox for running coding agents unattended, isolated from the host. The container sees your repos and your agent skills — no SSH key inside: GitHub access goes through a fine-grained PAT you can scope and revoke. Recreate the container and you get a fresh environment.
+Docker sandbox for running coding agents unattended. You choose which repos the sandbox gets; the agent works on disposable copies of them and can't touch your files — the only way its changes come back is a `git push` you review. Recreate the container and you're back to a clean slate.
 
 ## Setup
 
@@ -39,11 +39,30 @@ Projects with a committed `.npmrc` just work. For registries configured at user 
 
 ## What the container sees
 
-Mounted from the host at the same paths: `~/Code` (read-write) and your agent skills — `~/.claude/skills`, plus `~/.agents` so skill symlinks resolve. Everything else is image-baked and gone on recreate.
+Your `~/Code` is mounted **read-only** at `/mnt/seed`. At startup the entrypoint copies the repos listed in `SANDBOX_REPOS` into the container's own `~/Code` — that's where the agent works. The host filesystem can't be written from inside; changes leave via `git push` only.
+
+Your agent skills are mounted from the host: `~/.claude/skills`, plus `~/.agents` so skill symlinks resolve. Everything else is image-baked and gone on recreate.
 
 The container uses the UID/GID configured in `.env`. Match them to `id -u` and `id -g`: on Linux, those IDs own files created in bind mounts; on macOS, Docker Desktop remaps bind-mount ownership, but accurate values keep the setup portable.
 
 Host-specific mounts go in `docker-compose.override.yml` (gitignored, merged automatically) — see the `.example`.
+
+## The working copies
+
+In `.env`:
+
+```bash
+SANDBOX_REPOS="myorg/api client-site"        # paths relative to ~/Code
+SANDBOX_COPY_EXCLUDES="node_modules"         # dirs skipped while copying
+```
+
+How it behaves:
+
+- The copy is a snapshot of the working tree **as-is** — uncommitted changes and untracked files (yes, `.env`s) travel too. That's the point: the sandbox reproduces your current state without per-project configuration.
+- `SANDBOX_COPY_EXCLUDES` skips directories at any depth (nested `node_modules` in monorepos included). Empty means copy everything; the mechanism has no opinion, the suggested value does — platform-specific artifacts wouldn't survive the macOS → Linux jump anyway, so reinstall inside.
+- Repos are copied only when absent from the container's `~/Code`: restarts keep work in progress, recreating the container (`docker compose down && up -d`) starts over from a fresh copy of the host's current state. Push before you recreate.
+- Getting work out: the copied repo keeps its `origin`, and the container rewrites ssh remotes to https with `GH_TOKEN`, so `git push` works as usual. Review as a PR, pull on the host if you like it.
+- Changed the list? Recreate the container — already-copied repos are left as they are, new entries are copied in.
 
 ## Lifecycle
 
