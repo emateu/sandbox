@@ -59,6 +59,26 @@ for src_root in /mnt/skills /usr/share/claude-skills; do
   done
 done
 
+# herdr headless server with a workspace per seeded repo; restarts restore
+# from session.json, so only missing ones are created
+if [ -n "${SANDBOX_REPOS:-}" ] && command -v herdr >/dev/null 2>&1; then
+  if ! herdr workspace list >/dev/null 2>&1; then
+    (herdr server >/dev/null 2>&1 &)
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      herdr workspace list >/dev/null 2>&1 && break
+      sleep 0.5
+    done
+  fi
+  existing="$(herdr workspace list 2>/dev/null || true)"
+  for repo in $SANDBOX_REPOS; do
+    [ -d "$HOME/Code/$repo" ] || continue
+    case "$existing" in *"\"label\":\"$repo\""*) continue ;; esac
+    herdr workspace create --cwd "$HOME/Code/$repo" --label "$repo" >/dev/null 2>&1 \
+      && echo "herdr: workspace $repo" \
+      || echo "herdr: workspace create failed for $repo" >&2
+  done
+fi
+
 # jira-cli config regenerated from .env each recreate; non-fatal, and
 # </dev/null so an unexpected prompt fails instead of hanging the boot
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "${JIRA_SERVER:-}" ] && [ -n "${JIRA_LOGIN:-}" ] \
