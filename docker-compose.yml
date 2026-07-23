@@ -31,9 +31,9 @@ services:
       # :z is for SELinux hosts; Docker on macOS ignores it.
       # The entrypoint copies SANDBOX_REPOS from here into the container's ~/Code
       - ${HOME}/Code:/mnt/seed:ro,z
-      # Skills live from the host; ~/.agents mounted so skill symlinks resolve.
-      - ${HOME}/.claude/skills:/home/${USERNAME}/.claude/skills:z
-      - ${HOME}/.agents:/home/${USERNAME}/.agents:z
+      # Skills copied in likewise; ~/.agents mounted so skill symlinks resolve
+      - ${HOME}/.claude/skills:/mnt/skills:ro,z
+      - ${HOME}/.agents:/home/${USERNAME}/.agents:ro,z
       # oauth-token tool + refresh_token store; rw so token rotation persists.
       - ./tools/oauth-token:/home/${USERNAME}/.oauth-token:z
       # Host-specific mounts go in docker-compose.override.yml (see .example).

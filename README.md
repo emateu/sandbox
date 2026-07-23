@@ -41,7 +41,7 @@ Projects with a committed `.npmrc` just work. For registries configured at user 
 
 Your `~/Code` is mounted **read-only** at `/mnt/seed`. At startup the entrypoint copies the repos listed in `SANDBOX_REPOS` into the container's own `~/Code` — that's where the agent works. The host filesystem can't be written from inside; changes leave via `git push` only.
 
-Your agent skills are mounted from the host: `~/.claude/skills`, plus `~/.agents` so skill symlinks resolve. Everything else is image-baked and gone on recreate.
+Your agent skills ride along the same way: `~/.claude/skills` is mounted read-only and copied in at startup, and `~/.agents` is mounted read-only so skill symlinks resolve. The one writable host mount is `tools/oauth-token`, deliberately — token rotation has to persist. Everything else is image-baked and gone on recreate.
 
 The container uses the UID/GID configured in `.env`. Match them to `id -u` and `id -g`: on Linux, those IDs own files created in bind mounts; on macOS, Docker Desktop remaps bind-mount ownership, but accurate values keep the setup portable.
 

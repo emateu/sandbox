@@ -33,14 +33,17 @@ if [ -n "${SANDBOX_REPOS:-}" ] && [ -d /mnt/seed ]; then
   done
 fi
 
-# Seed baked skills, copy-if-missing (-L: dangling links may be valid on host)
+# Seed skills, copy-if-missing: host-mounted first — they win name conflicts —
+# then baked (-L: dangling links may be valid on host)
 SKILLS_DIR="$HOME/.claude/skills"
-if [ -d /usr/share/claude-skills ] && [ -w "$SKILLS_DIR" ]; then
-  for s in /usr/share/claude-skills/*/; do
+mkdir -p "$SKILLS_DIR"
+for src_root in /mnt/skills /usr/share/claude-skills; do
+  [ -d "$src_root" ] || continue
+  for s in "$src_root"/*/; do
     [ -d "$s" ] || continue
     dest="$SKILLS_DIR/$(basename "$s")"
     [ -e "$dest" ] || [ -L "$dest" ] || cp -r "$s" "$dest"
   done
-fi
+done
 
 exec "$@"
