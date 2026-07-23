@@ -19,7 +19,7 @@ as errors or warnings before you build.
 
 ## Contents
 
-Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + oh-my-zsh · Node (fnm) · bun · git, gh, vim, jq · Claude Code CLI · herdr with its Claude Code integration and skill.
+Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + oh-my-zsh · Node (fnm) · bun · git, gh, vim, jq · Claude Code CLI · herdr with its Claude Code integration and skill · hunkdiff with its review skill · jira-cli.
 
 Tools install through their official installers at whatever version is latest when the layer builds; rebuild with `--no-cache` to refresh them.
 
@@ -63,6 +63,18 @@ How it behaves:
 - Repos are copied only when absent from the container's `~/Code`: restarts keep work in progress, recreating the container (`docker compose down && up -d`) starts over from a fresh copy of the host's current state. Push before you recreate.
 - Getting work out: the copied repo keeps its `origin`, and the container rewrites ssh remotes to https with `GH_TOKEN`, so `git push` works as usual. Review as a PR, pull on the host if you like it.
 - Changed the list? Recreate the container — already-copied repos are left as they are, new entries are copied in.
+
+## Editor / ssh access
+
+The container runs sshd on a loopback-only port (`SANDBOX_SSH_PORT`, default 2222), with promptless login — no keys, no password. Sound because `127.0.0.1` binding keeps it host-only, and anyone local can already `docker exec`. Don't re-publish that port.
+
+- Shell: `ssh <user>@localhost -p 2222`
+- Zed: `Cmd-Shift-P` → "Connect to SSH host" → `ssh://<user>@localhost:2222`, then open a folder under `~/Code`. Language servers run inside the container.
+- Host keys persist in `tools/ssh/` (gitignored), so the fingerprint survives rebuilds — accept it once.
+
+## One sandbox per tenant
+
+Clone this repo once per tenant, each clone with its own `.env`: unique `SANDBOX_NAME` and `SANDBOX_SSH_PORT`, plus that tenant's repos and tokens. Preflight errors on collisions with other instances.
 
 ## Lifecycle
 
