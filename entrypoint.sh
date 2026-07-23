@@ -43,6 +43,16 @@ if [ -n "${SANDBOX_REPOS:-}" ] && [ -d /mnt/seed ]; then
         esac
       done
     fi
+    # Init hook: repos shipping .sandbox-init.sh (committed or not — the copy
+    # takes the working tree as-is) run it once per fresh copy, non-fatal
+    if [ -f "$dest/.sandbox-init.sh" ]; then
+      if (cd "$dest" && bash -c '. "$HOME/.config/shellrc.sh"; bash .sandbox-init.sh') \
+           > "$dest/.sandbox-init.log" 2>&1 </dev/null; then
+        echo "seed: init $repo ok"
+      else
+        echo "seed: init $repo failed — see .sandbox-init.log in the repo copy" >&2
+      fi
+    fi
   done
 fi
 

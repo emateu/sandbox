@@ -63,6 +63,7 @@ How it behaves:
 - Repos are copied only when absent from the container's `~/Code`: restarts keep work in progress, recreating the container (`docker compose down && up -d`) starts over from a fresh copy of the host's current state. Push before you recreate.
 - Getting work out: the copied repo keeps its `origin`, and the container rewrites ssh remotes to https with `GH_TOKEN`, so `git push` works as usual. Review as a PR, pull on the host if you like it.
 - Changed the list? Recreate the container — already-copied repos are left as they are, new entries are copied in.
+- A repo shipping a `.sandbox-init.sh` gets it run after each fresh copy (repo cwd, your user, toolchain on PATH) — dependency installs go there. Output lands in `.sandbox-init.log` next to it. Untracked counts too, so you can add one without touching the project's history.
 
 ## Editor / ssh access
 
