@@ -30,6 +30,11 @@ RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://fnm.vercel.app/install | 
 RUN FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm install ${NODE_VERSION} \
     && FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm default ${NODE_VERSION}
 
+# hunkdiff; its bundled hunk-review skill joins the baked skills the entrypoint seeds
+RUN FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fnm/fnm exec --using ${NODE_VERSION} npm install -g hunkdiff \
+    && mkdir -p /usr/share/claude-skills \
+    && cp -r /home/${USERNAME}/.local/share/fnm/node-versions/*/installation/lib/node_modules/hunkdiff/skills/hunk-review /usr/share/claude-skills/
+
 # bun (official installer; rc wiring lives in shellrc.sh)
 RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://bun.com/install | bash'
 
@@ -37,6 +42,7 @@ RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://bun.com/install | bash'
 RUN HERDR_INSTALL_DIR=/usr/local/bin sh -c 'curl -fsSL https://herdr.dev/install.sh | sh'
 
 COPY config/herdr-config.toml /home/${USERNAME}/.config/herdr/config.toml
+COPY config/hunk-config.toml /home/${USERNAME}/.config/hunk/config.toml
 
 # Shared shell config: TERM, fnm/bun/claude PATH wiring, claude wrapper, prompt tag
 COPY config/shellrc.sh /home/${USERNAME}/.config/shellrc.sh
