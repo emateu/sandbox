@@ -32,7 +32,8 @@ claude() {
   IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"
 }
 
-# [sandbox] prompt tag (zsh only; after the theme has set PROMPT)
+# [hostname] prompt tag — the instance name under multi-tenant setups
+# (zsh only; after the theme has set PROMPT)
 if [ -n "$ZSH_VERSION" ] && [ -f /.dockerenv ]; then
-  PROMPT="%F{243}[sandbox]%f ${PROMPT}"
+  PROMPT="%F{243}[%m]%f ${PROMPT}"
 fi

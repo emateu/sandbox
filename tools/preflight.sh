@@ -201,6 +201,23 @@ else
   warn "SANDBOX_REPOS unset — the container's ~/Code starts empty (host repos are only visible read-only at /mnt/seed)"
 fi
 
+# --- instance collisions (multi-tenant: one checkout per sandbox) ---------------
+SANDBOX_NAME_VALUE="$(strip_quotes "$(best_effort_value SANDBOX_NAME)")"
+SANDBOX_NAME_VALUE="${SANDBOX_NAME_VALUE:-sandbox}"
+SSH_PORT_VALUE="$(strip_quotes "$(best_effort_value SANDBOX_SSH_PORT)")"
+SSH_PORT_VALUE="${SSH_PORT_VALUE:-2222}"
+if [ "$compose_ready" -eq 1 ]; then
+  owner="$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.project.working_dir" }}' "$SANDBOX_NAME_VALUE" 2>/dev/null || true)"
+  if [ -n "$owner" ] && [ "$owner" != "$REPO" ]; then
+    err "container name '$SANDBOX_NAME_VALUE' belongs to another checkout ($owner) — set SANDBOX_NAME in .env"
+  elif [ -z "$owner" ] && command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "$SSH_PORT_VALUE" >/dev/null 2>&1; then
+    # No container of ours holds the port, yet something is listening on it.
+    err "port $SSH_PORT_VALUE is already in use on 127.0.0.1 — set SANDBOX_SSH_PORT in .env"
+  else
+    ok "instance '$SANDBOX_NAME_VALUE' on port $SSH_PORT_VALUE — no collisions"
+  fi
+fi
+
 # --- credentials --------------------------------------------------------------
 STORE="$REPO/tools/oauth-token/.tokens.json"
 if [ -z "$TOKEN" ] && [ ! -f "$STORE" ]; then
