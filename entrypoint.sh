@@ -88,23 +88,33 @@ for src_root in /mnt/skills /usr/share/claude-skills; do
 done
 
 # Skills installed on the fly via the skills CLI (-a/-g/-y make it unattended);
-# one run per line — `add` takes a single source repo, so skills from different
-# repos can't share an invocation. Seeding above ran first, so a host skill
-# with the same name overrides by claiming it. skills.sh exits 0 even when
-# nothing installs — verify the file landed. Non-fatal: no network, no skill.
-while read -r repo skill; do
-  [ -e "$SKILLS_DIR/$skill" ] && continue
-  if bash -c '. "$HOME/.config/shellrc.sh"
-        npx -y skills@latest add "$1" --skill "$2" -a claude-code -g -y' \
-       _ "$repo" "$skill" >/dev/null 2>&1 </dev/null \
-     && [ -f "$SKILLS_DIR/$skill/SKILL.md" ]; then
-    echo "skills: $skill installed from $repo"
-  else
-    echo "skills: $skill install failed — run \`npx skills add $repo --skill $skill\` manually" >&2
-  fi
+# one run per line: a repo followed by its skills — `add` takes a single source
+# repo, so different repos can't share an invocation. Seeding above ran first,
+# so a host skill with the same name overrides by claiming it. skills.sh exits
+# 0 even when nothing installs — verify each skill landed. Non-fatal: no
+# network, no skill.
+while read -r repo skills; do
+  missing=""
+  for skill in $skills; do
+    if [ ! -e "$SKILLS_DIR/$skill" ]; then missing="$missing $skill"; fi
+  done
+  if [ -z "$missing" ]; then continue; fi
+  bash -c '. "$HOME/.config/shellrc.sh"
+    repo="$1"; shift; flags=()
+    for s in "$@"; do flags+=(--skill "$s"); done
+    npx -y skills@latest add "$repo" "${flags[@]}" -a claude-code -g -y' \
+    _ "$repo" $missing >/dev/null 2>&1 </dev/null || true
+  for skill in $missing; do
+    if [ -f "$SKILLS_DIR/$skill/SKILL.md" ]; then
+      echo "skills: $skill installed from $repo"
+    else
+      echo "skills: $skill install failed — run \`npx skills add $repo --skill $skill\` manually" >&2
+    fi
+  done
 done <<'EOF'
 https://github.com/ogulcancelik/herdr herdr
 https://github.com/wshobson/agents typescript-advanced-types
+https://github.com/mattpocock/skills handoff grill-with-docs
 EOF
 
 # herdr headless server with a workspace per seeded repo; restarts restore

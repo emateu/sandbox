@@ -4,6 +4,7 @@
   "autoCompactEnabled": false,
   "spinnerTipsEnabled": false,
   "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "permissions": {
     "defaultMode": "dontAsk"
