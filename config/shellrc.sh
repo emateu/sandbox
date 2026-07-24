@@ -29,7 +29,7 @@ claude() {
     _t="$(node "$(dirname "$OAUTH_TOKEN_STORE")/refresh.mjs" --print 2>/dev/null)" \
       && [ -n "$_t" ] && export CLAUDE_CODE_OAUTH_TOKEN="$_t"
   fi
-  IS_DEMO=0 command claude --dangerously-skip-permissions --effort max "$@"
+  IS_DEMO=0 command claude --dangerously-skip-permissions --effort high "$@"
 }
 
 # [hostname] prompt tag — the instance name under multi-tenant setups
