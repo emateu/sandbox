@@ -5,7 +5,7 @@ ARG HOST_GID=1000
 ARG USERNAME=dev
 ARG NODE_VERSION=22
 
-RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server && dnf clean all
+RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop && dnf clean all
 
 RUN if getent group ${HOST_GID} >/dev/null; then \
         GROUPNAME=$(getent group ${HOST_GID} | cut -d: -f1); \
