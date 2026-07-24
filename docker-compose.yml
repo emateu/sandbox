@@ -42,9 +42,11 @@ services:
       # :z is for SELinux hosts; Docker on macOS ignores it.
       # The entrypoint copies SANDBOX_REPOS from here into the container's ~/Code
       - ${HOME}/Code:/mnt/seed:ro,z
-      # Skills copied in likewise; ~/.agents mounted so skill symlinks resolve
+      # Skills copied in likewise; ~/.agents mounted OUTSIDE the container home
+      # so the entrypoint can dereference skills-CLI symlinks while in-container
+      # `npx skills` keeps a writable ~/.agents store of its own
       - ${HOME}/.claude/skills:/mnt/skills:ro,z
-      - ${HOME}/.agents:/home/${USERNAME}/.agents:ro,z
+      - ${HOME}/.agents:/mnt/agents:ro,z
       # oauth-token tool + refresh_token store; rw so token rotation persists.
       - ./tools/oauth-token:/home/${USERNAME}/.oauth-token:z
       # ssh host keys, generated on first boot

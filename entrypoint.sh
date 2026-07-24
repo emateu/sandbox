@@ -57,15 +57,33 @@ if [ -n "${SANDBOX_REPOS:-}" ] && [ -d /mnt/seed ]; then
 fi
 
 # Seed skills, copy-if-missing: host-mounted first — they win name conflicts —
-# then baked (-L: dangling links may be valid on host)
+# then baked. Mirrors the skills-CLI layout: real content in ~/.agents/skills
+# (the canonical store every agent reads), relative symlink in ~/.claude/skills.
+# Host entries are mostly skills-CLI symlinks whose relative targets dangle
+# under /mnt, so resolve them against the /mnt/agents mount
 SKILLS_DIR="$HOME/.claude/skills"
-mkdir -p "$SKILLS_DIR"
+STORE_DIR="$HOME/.agents/skills"
+mkdir -p "$SKILLS_DIR" "$STORE_DIR"
 for src_root in /mnt/skills /usr/share/claude-skills; do
   [ -d "$src_root" ] || continue
-  for s in "$src_root"/*/; do
-    [ -d "$s" ] || continue
-    dest="$SKILLS_DIR/$(basename "$s")"
-    [ -e "$dest" ] || [ -L "$dest" ] || cp -r "$s" "$dest"
+  for s in "$src_root"/*; do
+    name="$(basename "$s")"
+    link="$SKILLS_DIR/$name"
+    if [ -e "$link" ] || [ -L "$link" ]; then continue; fi
+    if [ -L "$s" ]; then
+      if [ -d "/mnt/agents/skills/$name" ]; then
+        src="/mnt/agents/skills/$name"
+      else
+        echo "skills: $name is a link with no target under /mnt/agents — skipped" >&2
+        continue
+      fi
+    elif [ -d "$s" ]; then
+      src="$s"
+    else
+      continue
+    fi
+    [ -e "$STORE_DIR/$name" ] || cp -r "$src" "$STORE_DIR/$name"
+    ln -s "../../.agents/skills/$name" "$link"
   done
 done
 
