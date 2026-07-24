@@ -82,9 +82,6 @@ RUN printf '%s\n' \
        "AllowUsers ${USERNAME}" \
        > /etc/ssh/sshd_config.d/50-sandbox.conf
 
-# Baked skills; the entrypoint seeds missing ones into the skills dir
-COPY skills/ /usr/share/claude-skills/
-
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

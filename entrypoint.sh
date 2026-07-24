@@ -69,6 +69,26 @@ for src_root in /mnt/skills /usr/share/claude-skills; do
   done
 done
 
+# Skills installed on the fly via the skills CLI (-a/-g/-y make it unattended);
+# one run per line — `add` takes a single source repo, so skills from different
+# repos can't share an invocation. Seeding above ran first, so a host skill
+# with the same name overrides by claiming it. skills.sh exits 0 even when
+# nothing installs — verify the file landed. Non-fatal: no network, no skill.
+while read -r repo skill; do
+  [ -e "$SKILLS_DIR/$skill" ] && continue
+  if bash -c '. "$HOME/.config/shellrc.sh"
+        npx -y skills@latest add "$1" --skill "$2" -a claude-code -g -y' \
+       _ "$repo" "$skill" >/dev/null 2>&1 </dev/null \
+     && [ -f "$SKILLS_DIR/$skill/SKILL.md" ]; then
+    echo "skills: $skill installed from $repo"
+  else
+    echo "skills: $skill install failed — run \`npx skills add $repo --skill $skill\` manually" >&2
+  fi
+done <<'EOF'
+https://github.com/ogulcancelik/herdr herdr
+https://github.com/wshobson/agents typescript-advanced-types
+EOF
+
 # herdr headless server with a workspace per seeded repo; restarts restore
 # from session.json, so only missing ones are created
 if [ -n "${SANDBOX_REPOS:-}" ] && command -v herdr >/dev/null 2>&1; then
