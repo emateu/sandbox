@@ -19,13 +19,13 @@ as errors or warnings before you build.
 
 ## Contents
 
-Fedora 44 (digest-pinned) · container user matching your host UID/GID · zsh + oh-my-zsh · Node (fnm) · bun · git, gh, vim, jq · Claude Code CLI · herdr with its Claude Code integration and skill · hunkdiff with its review skill · jira-cli.
+Fedora 44 (digest-pinned) · zsh + oh-my-zsh · Node (fnm) · bun · git, gh, vim, jq · claude · herdr · hunkdiff · jira-cli.
 
 Tools install through their official installers at whatever version is latest when the layer builds; rebuild with `--no-cache` to refresh them.
 
 ## GitHub access
 
-`GH_TOKEN` (a fine-grained PAT) authenticates `gh` directly and `git` through gh's credential helper. SSH remotes (`git@github.com:...`) are rewritten to https on the fly via `url.insteadOf`, so existing checkouts push fine without any key in the container.
+`GH_TOKEN` (a fine-grained PAT) authenticates both `gh` and `git`. SSH remotes are rewritten to https, so no key lives in the container.
 
 ## Helper tools
 
