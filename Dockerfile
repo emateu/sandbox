@@ -5,7 +5,9 @@ ARG HOST_GID=1000
 ARG USERNAME=dev
 ARG NODE_VERSION=22
 
-RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop make gcc gcc-c++ python3 && dnf clean all
+RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop make gcc gcc-c++ python3 podman podman-compose fuse-overlayfs passt && dnf clean all \
+    # image builds drop file capabilities; newuidmap/newgidmap need cap_setuid/setgid
+    && rpm --restore shadow-utils
 
 RUN if getent group ${HOST_GID} >/dev/null; then \
         GROUPNAME=$(getent group ${HOST_GID} | cut -d: -f1); \
@@ -16,7 +18,9 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     && useradd -u ${HOST_UID} -g ${HOST_GID} -m -s /usr/bin/zsh ${USERNAME} \
     && passwd -d ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
-    && chmod 0440 /etc/sudoers.d/${USERNAME}
+    && chmod 0440 /etc/sudoers.d/${USERNAME} \
+    # subuid/subgid ranges for rootless podman; useradd doesn't create them here
+    && usermod --add-subuids 100000-165535 --add-subgids 100000-165535 ${USERNAME}
 
 # oh-my-zsh
 RUN git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /home/${USERNAME}/.oh-my-zsh \
@@ -56,6 +60,11 @@ RUN arch=$(uname -m | sed 's/aarch64/arm64/') \
 
 COPY config/herdr-config.toml /home/${USERNAME}/.config/herdr/config.toml
 COPY config/hunk-config.toml /home/${USERNAME}/.config/hunk/config.toml
+
+# Rootless podman config (compose adds /dev/fuse + seccomp/label opts)
+COPY config/containers.conf /home/${USERNAME}/.config/containers/containers.conf
+COPY config/containers-storage.conf /home/${USERNAME}/.config/containers/storage.conf
+COPY config/containers-registries.conf /home/${USERNAME}/.config/containers/registries.conf
 
 # Shared shell config: TERM, fnm/bun/claude PATH wiring, claude wrapper, prompt tag
 COPY config/shellrc.sh /home/${USERNAME}/.config/shellrc.sh

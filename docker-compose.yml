@@ -17,6 +17,19 @@ services:
     ports:
       # Loopback only — the no-auth sshd must never be reachable off-host
       - "127.0.0.1:${SANDBOX_SSH_PORT:-2222}:22"
+    # Rootless podman inside: fuse-overlayfs needs the device; docker's default
+    # seccomp profile blocks the nested-userns mount syscalls. On AppArmor
+    # hosts (Ubuntu) add `apparmor:unconfined`.
+    devices:
+      - /dev/fuse
+      - /dev/net/tun
+    security_opt:
+      - seccomp:unconfined
+      - label:disable
+      # netavark (nested bridge networks) writes net sysctls in its rootless
+      # netns; runc's default /proc/sys mask returns EROFS on those. Caps still
+      # gate host-level sysctls, so unmasking stays contained.
+      - systempaths=unconfined
     environment:
       # Fallback token. The claude() wrapper prefers refreshing from the
       # oauth-token store below when it is present.
