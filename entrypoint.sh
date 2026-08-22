@@ -56,6 +56,17 @@ if [ -n "${SANDBOX_REPOS:-}" ] && [ -d /mnt/seed ]; then
   done
 fi
 
+# Per-repo workspace trust in ~/.claude.json (the baked file only trusts the
+# ~/Code parent); idempotent, so restarts just re-assert it
+if [ -n "${SANDBOX_REPOS:-}" ]; then
+  cfg="$HOME/.claude.json"
+  [ -f "$cfg" ] || echo '{}' > "$cfg"
+  for repo in $SANDBOX_REPOS; do
+    jq --arg d "$HOME/Code/$repo" '.projects[$d].hasTrustDialogAccepted = true' \
+      "$cfg" > "$cfg.tmp" && mv "$cfg.tmp" "$cfg"
+  done
+fi
+
 # Seed skills, copy-if-missing: host-mounted first — they win name conflicts —
 # then baked. Mirrors the skills-CLI layout: real content in ~/.agents/skills
 # (the canonical store every agent reads), relative symlink in ~/.claude/skills.
