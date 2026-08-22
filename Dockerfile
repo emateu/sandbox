@@ -91,6 +91,9 @@ RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://claude.ai/install.sh | ba
 # Claude Code settings (herdr integration below appends its hook here)
 COPY config/claude-settings.json /home/${USERNAME}/.claude/settings.json
 
+# Global memory: loaded in every session regardless of project
+COPY config/CLAUDE.md /home/${USERNAME}/.claude/CLAUDE.md
+
 # Workspace trust gates statusLine/hooks (skip-permissions does NOT grant it);
 # worktrees path pinned in herdr-config.toml
 RUN printf '%s\n' \
