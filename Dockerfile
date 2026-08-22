@@ -5,7 +5,7 @@ ARG HOST_GID=1000
 ARG USERNAME=dev
 ARG NODE_VERSION=22
 
-RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop nmap-ncat make gcc gcc-c++ python3 podman podman-compose podman-docker fuse-overlayfs passt && dnf clean all \
+RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop nmap-ncat make gcc gcc-c++ python3 podman podman-compose podman-docker fuse-overlayfs passt ncurses-term && dnf clean all \
     # image builds drop file capabilities; newuidmap/newgidmap need cap_setuid/setgid
     && rpm --restore shadow-utils
 
@@ -44,8 +44,16 @@ RUN FNM_DIR=/home/${USERNAME}/.local/share/fnm /home/${USERNAME}/.local/share/fn
     && mkdir -p /usr/share/claude-skills \
     && cp -r /home/${USERNAME}/.local/share/fnm/node-versions/*/installation/lib/node_modules/hunkdiff/skills/hunk-review /usr/share/claude-skills/
 
-# bun (official installer; rc wiring lives in shellrc.sh)
-RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://bun.com/install | bash'
+# bun (official installer; rc wiring lives in shellrc.sh). The ~/.local/bin
+# symlink puts bun on the minimal PATH daemons spawn subprocesses with
+RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://bun.com/install | bash' \
+    && mkdir -p /home/${USERNAME}/.local/bin \
+    && ln -s ../../.bun/bin/bun /home/${USERNAME}/.local/bin/bun
+
+# Ghostty terminfo (absent from ncurses-term); with it present, shellrc keeps
+# the real TERM and terminal capabilities (kitty graphics etc.) stay visible
+COPY config/xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
+RUN tic -x -o /usr/share/terminfo /tmp/xterm-ghostty.terminfo && rm /tmp/xterm-ghostty.terminfo
 
 # herdr (herdr.dev); system-wide so the root-run integration step finds it
 RUN HERDR_INSTALL_DIR=/usr/local/bin sh -c 'curl -fsSL https://herdr.dev/install.sh | sh'

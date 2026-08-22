@@ -1,7 +1,9 @@
 # Shared shell config, sourced from both .bashrc and .zshrc.
 
-# Some host terminals lack terminfo entries here; force known-good values.
-export TERM=xterm-256color
+# Some host terminals lack terminfo entries here; fall back to a known-good
+# value only then — a real TERM (xterm-ghostty etc.) carries the graphics
+# capabilities herdr keys off
+command -v infocmp >/dev/null 2>&1 && infocmp "$TERM" >/dev/null 2>&1 || export TERM=xterm-256color
 export COLORTERM=truecolor
 
 # ssh sessions get a clean env; the entrypoint persists the container's here
