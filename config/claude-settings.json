@@ -6,6 +6,9 @@
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
+  "sandbox": {
+    "enabled": false
+  },
   "permissions": {
     "defaultMode": "dontAsk"
   },
