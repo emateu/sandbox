@@ -124,13 +124,29 @@ RUN chmod +x /home/${USERNAME}/.claude/statusline.sh
 # herdr <-> Claude integration (registers an absolute hook path)
 RUN HOME=/home/${USERNAME} herdr integration install claude
 
+# terminal-browser Electron/Chromium runtime deps; weak deps skipped, so fonts
+# go named explicitly
+RUN dnf install -y --setopt=install_weak_deps=False \
+        nss alsa-lib at-spi2-atk at-spi2-core cups-libs gtk3 mesa-libgbm \
+        google-noto-sans-vf-fonts \
+    && dnf clean all
+
+# terminal-browser (official installer; no vscode in here)
+RUN HOME=/home/${USERNAME} bash -c 'curl -fsSL https://terminal-browser.sh/install | TERMINAL_BROWSER_SKIP_EDITOR_SETUP=1 bash'
+
 # Build steps ran as root; hand the home to the user. ~/Code made here — nothing
 # mounts it now, and the runtime would create the workdir root-owned.
 RUN mkdir -p /home/${USERNAME}/Code \
     && chown -R ${HOST_UID}:${HOST_GID} /home/${USERNAME}
 
+# Chromium SUID sandbox helper: the tarball can't ship it root-owned, and the
+# chown -R above strips setuid — so this must come after it
+RUN chown root:root /home/${USERNAME}/.local/share/terminal-browser/app/electron/chrome-sandbox \
+    && chmod 4755 /home/${USERNAME}/.local/share/terminal-browser/app/electron/chrome-sandbox
+
 # docker exec sets no SHELL; herdr falls back to sh without it
 ENV SHELL=/usr/bin/zsh
+ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
 
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}/Code
