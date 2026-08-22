@@ -5,7 +5,7 @@ ARG HOST_GID=1000
 ARG USERNAME=dev
 ARG NODE_VERSION=22
 
-RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop nmap-ncat make gcc gcc-c++ python3 podman podman-compose fuse-overlayfs passt && dnf clean all \
+RUN dnf install -y sudo unzip zsh git curl gh vim jq gawk rsync openssh-server procps-ng htop nmap-ncat make gcc gcc-c++ python3 podman podman-compose podman-docker fuse-overlayfs passt && dnf clean all \
     # image builds drop file capabilities; newuidmap/newgidmap need cap_setuid/setgid
     && rpm --restore shadow-utils
 
