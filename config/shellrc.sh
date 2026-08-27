@@ -24,6 +24,10 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # Claude Code lives in ~/.local/bin
 export PATH="$HOME/.local/bin:$PATH"
 
+# no nonessential Anthropic traffic: claude sessions stay off claude.ai (no
+# artifacts/telemetry either); local --resume unaffected
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+
 # Unattended flags; token refreshed from the mounted store when present.
 claude() {
   local _t
